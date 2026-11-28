@@ -398,4 +398,1112 @@
     .modal-title { font-size: 14px; font-weight: 700; color: var(--text); }
     .modal-close { padding: 4px; color: var(--subtle); border-radius: 8px; }
     .modal-close:hover { color: var(--text); background: #f1f5f9; }
-    .field-label { display: block; font-size: 12px; font-weight: 600; color: #
+    .field-label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    .field-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      outline: none;
+    }
+    .field-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+    .btn-cancel {
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .btn-save {
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--orange);
+      color: #fff;
+    }
+
+    /* Toast */
+    .toast-wrap {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 300px;
+      width: calc(100% - 32px);
+      pointer-events: none;
+    }
+    .toast-item {
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25);
+      transition: opacity 0.25s;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toastContainer" class="toast-wrap"></div>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/>
+            <path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">LangkahKu</h1>
+          <p id="todayDateLabel" class="brand-date">Hari ini</p>
+        </div>
+      </div>
+
+      <button id="editGoalBtn" type="button" class="target-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+        </svg>
+        <span>Target</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="card" style="display:flex;flex-direction:column;align-items:center;">
+      <div class="status-row">
+        <span id="sensorStatusPill" class="pill pill-neutral">
+          <span class="pill-dot"></span>
+          <span id="sensorStatusText">Memeriksa sensor...</span>
+        </span>
+        <span id="rhythmLockBadge" class="rhythm-badge">Memeriksa</span>
+      </div>
+
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 220 220">
+          <circle cx="110" cy="110" r="94" stroke="#f1f5f9" stroke-width="14" fill="none" />
+          <circle id="progressCircle" class="ring-progress" cx="110" cy="110" r="94" stroke="#ea580c" stroke-width="14" stroke-linecap="round" fill="none" stroke-dasharray="590.62" stroke-dashoffset="590.62" />
+        </svg>
+        <div class="ring-center">
+          <span id="stepCountText" class="step-number">0</span>
+          <span class="step-goal">dari <strong id="goalCountText">8.000</strong> langkah</span>
+          <span id="goalPercentText" class="step-pct">0%</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button id="toggleTrackingBtn" type="button" class="btn-primary">
+          <span id="toggleTrackingIcon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          </span>
+          <span id="toggleTrackingLabel">Mulai Hitung</span>
+        </button>
+        <button id="resetTodayBtn" type="button" title="Reset langkah hari ini" aria-label="Reset langkah hari ini" class="btn-reset">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="signal-box">
+        <div class="signal-head">
+          <span id="sensorSourceLabel">Sumber Sensor: Mendeteksi...</span>
+          <span id="signalReadout" class="signal-val">0.00 m/s²</span>
+        </div>
+        <div class="signal-track">
+          <div id="signalBar" class="signal-fill"></div>
+          <div id="thresholdMarker" class="signal-marker" title="Ambang batas langkah"></div>
+        </div>
+        <div class="signal-foot">
+          <span id="sensorModeInfo">Filter gravitasi + ritme 3 langkah</span>
+          <span id="rejectedCountText">Guncangan diabaikan: 0</span>
+        </div>
+      </div>
+
+      <div id="sensorDiagnosticBox" class="diag-box hidden">
+        <p id="sensorDiagnosticTitle" class="diag-title"></p>
+        <p id="sensorDiagnosticDetail"></p>
+      </div>
+    </section>
+
+    <section class="card" style="padding:16px 18px;">
+      <div class="section-head">
+        <h2 class="section-label">Kalibrasi Posisi HP</h2>
+        <span id="sensThresholdText" class="section-mono">Threshold 1.25 m/s²</span>
+      </div>
+      <div class="sens-grid">
+        <button type="button" data-sens="low" class="sens-btn">Saku (Ketat)</button>
+        <button type="button" data-sens="medium" class="sens-btn active">Normal</button>
+        <button type="button" data-sens="high" class="sens-btn">Tangan (Peka)</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head" style="margin-bottom:0;">
+        <h2 class="history-title">Riwayat 7 Hari Terakhir</h2>
+        <span id="weeklyTotalText" class="history-total">Total: 0</span>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+  </main>
+
+  <div id="goalModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title">Target Langkah Harian</h3>
+        <button id="closeGoalModalBtn" type="button" class="modal-close" aria-label="Tutup">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <form id="goalForm">
+        <label for="goalInput" class="field-label">Jumlah langkah per hari</label>
+        <input id="goalInput" type="number" min="500" max="50000" step="500" required class="field-input" />
+        <div class="modal-actions">
+          <button id="cancelGoalBtn" type="button" class="btn-cancel">Batal</button>
+          <button type="submit" class="btn-save">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const STORAGE_KEY = 'langkahku_precision_v4';
+      const RING_CIRCUMFERENCE = 2 * Math.PI * 94;
+
+      const SENSITIVITY = {
+        low:    { peak: 1.65, valley: 0.55, label: 'Threshold 1.65 m/s²' },
+        medium: { peak: 1.25, valley: 0.45, label: 'Threshold 1.25 m/s²' },
+        high:   { peak: 0.95, valley: 0.35, label: 'Threshold 0.95 m/s²' }
+      };
+
+      const MIN_STEP_INTERVAL_MS = 260;
+      const MAX_STEP_INTERVAL_MS = 1300;
+      const RHYTHM_RESET_MS = 1650;
+      const CONFIRM_STEPS_NEEDED = 3;
+
+      const STATUS = {
+        AVAILABLE: 'AVAILABLE',
+        ACTIVE: 'ACTIVE',
+        UNAVAILABLE: 'UNAVAILABLE',
+        DENIED: 'DENIED'
+      };
+
+      const PLAY_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
+      const PAUSE_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+
+      function getTodayKey() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+
+      function formatDateHeading() {
+        try {
+          return new Date().toLocaleDateString('id-ID', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+          });
+        } catch (e) {
+          return getTodayKey();
+        }
+      }
+
+      function loadState() {
+        const fallback = { dailyGoal: 8000, sensitivity: 'medium', history: {} };
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            return {
+              dailyGoal: parsed.dailyGoal || 8000,
+              sensitivity: SENSITIVITY[parsed.sensitivity] ? parsed.sensitivity : 'medium',
+              history: parsed.history && typeof parsed.history === 'object' ? parsed.history : {}
+            };
+          }
+        } catch (e) {}
+        return fallback;
+      }
+
+      let state = loadState();
+      if (typeof state.history[getTodayKey()] !== 'number') {
+        state.history[getTodayKey()] = 0;
+      }
+
+      function saveState() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      }
+
+      const hasNativeBridge = typeof window.AndroidStepBridge !== 'undefined' && window.AndroidStepBridge !== null;
+      let sensorStatus = STATUS.AVAILABLE;
+      let sensorTypeLabel = 'Mendeteksi...';
+      let isTracking = false;
+      let hardwareSignalSeen = false;
+      let sensorWatchdog = null;
+      let idleCheckInterval = null;
+      let genericAccelSensor = null;
+
+      let gravity = { x: 0, y: 0, z: 0, initialized: false };
+      let magWindow = [];
+      let isPeakArmed = false;
+      let lastCandidateTime = 0;
+      let pendingRhythmSteps = 0;
+      let isWalkingLocked = false;
+      let rejectedJolts = 0;
+
+      function isEmbeddedIframe() {
+        try { return window.self !== window.top; } catch (e) { return true; }
+      }
+
+      function isInsecureOrigin() {
+        const proto = window.location.protocol;
+        if (proto === 'file:' || proto === 'content:') return true;
+        if (typeof window.isSecureContext === 'boolean' && !window.isSecureContext) return true;
+        return false;
+      }
+
+      function showToast(msg) {
+        const container = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        el.className = 'toast-item';
+        el.textContent = msg;
+        container.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = '0';
+          setTimeout(() => el.remove(), 260);
+        }, 2600);
+      }
+
+      function formatInt(n) {
+        return Math.round(n).toLocaleString('id-ID');
+      }
+
+      function getTodaySteps() {
+        const key = getTodayKey();
+        if (typeof state.history[key] !== 'number') state.history[key] = 0;
+        return state.history[key];
+      }
+
+      function setTodaySteps(value) {
+        state.history[getTodayKey()] = Math.max(0, Math.floor(value));
+        saveState();
+        renderUI();
+      }
+
+      function addSteps(count) {
+        setTodaySteps(getTodaySteps() + count);
+      }
+
+      function showDiagnostic(level, title, detail) {
+        const box = document.getElementById('sensorDiagnosticBox');
+        const tEl = document.getElementById('sensorDiagnosticTitle');
+        const dEl = document.getElementById('sensorDiagnosticDetail');
+        if (!title) {
+          box.classList.add('hidden');
+          return;
+        }
+        box.classList.remove('hidden');
+        box.className = level === 'error' ? 'diag-box error' : 'diag-box';
+        tEl.textContent = title;
+        dEl.textContent = detail;
+      }
+
+      function setSensorStatus(nextStatus, detailTitle, detailMsg) {
+        sensorStatus = nextStatus;
+        const pill = document.getElementById('sensorStatusPill');
+        const txt = document.getElementById('sensorStatusText');
+
+        if (nextStatus === STATUS.ACTIVE) {
+          pill.className = 'pill pill-active';
+          txt.textContent = 'Sensor aktif';
+          showDiagnostic(null, '', '');
+        } else if (nextStatus === STATUS.AVAILABLE) {
+          pill.className = 'pill pill-available';
+          txt.textContent = 'Sensor tersedia';
+          showDiagnostic(null, '', '');
+        } else if (nextStatus === STATUS.DENIED) {
+          pill.className = 'pill pill-denied';
+          txt.textContent = 'Izin ditolak';
+          showDiagnostic('error', detailTitle || 'Izin sensor aktivitas ditolak', detailMsg || 'Buka Pengaturan Aplikasi > LangkahKu > Izin > Aktivitas Fisik lalu pilih Izinkan.');
+        } else {
+          pill.className = 'pill pill-unavailable';
+          txt.textContent = 'Sensor tidak tersedia';
+          showDiagnostic('warn', detailTitle || 'Sensor gerak tidak tersedia', detailMsg || 'Install APK Android LangkahKu atau buka lewat tautan HTTPS langsung (bukan embed iframe).');
+        }
+
+        document.getElementById('sensorSourceLabel').textContent = `Sumber: ${sensorTypeLabel}`;
+        updateTrackingButtonUI();
+        updateRhythmBadge();
+      }
+
+      function initSensorEnvironment() {
+        if (hasNativeBridge) {
+          try {
+            const info = JSON.parse(window.AndroidStepBridge.getSensorInfo());
+            sensorTypeLabel = info.type && info.type !== 'NONE' ? `Native (${info.type})` : 'Tidak ada sensor fisik';
+            if (typeof info.todaySteps === 'number') setTodaySteps(info.todaySteps);
+            if (typeof info.rejectedJolts === 'number') rejectedJolts = info.rejectedJolts;
+            isTracking = Boolean(info.isTracking);
+
+            if (!info.available || info.type === 'NONE') {
+              setSensorStatus(STATUS.UNAVAILABLE, 'Sensor langkah tidak ditemukan', 'Perangkat Android ini tidak melaporkan TYPE_STEP_COUNTER, TYPE_STEP_DETECTOR, maupun TYPE_ACCELEROMETER.');
+            } else if (info.permissionRequired && !info.permissionGranted && info.permissionRequestedBefore) {
+              setSensorStatus(STATUS.DENIED, 'Izin Aktivitas Fisik ditolak', 'Ketuk Mulai Hitung untuk meminta ulang izin atau aktifkan di Pengaturan HP.');
+            } else if (isTracking) {
+              setSensorStatus(STATUS.ACTIVE);
+            } else {
+              setSensorStatus(STATUS.AVAILABLE);
+            }
+          } catch (e) {
+            sensorTypeLabel = 'Native (Error Bridge)';
+            setSensorStatus(STATUS.UNAVAILABLE, 'Gagal membaca sensor native', 'Pastikan WebView terhubung ke StepCounterService.');
+          }
+          return;
+        }
+
+        const hasGenericAccel = typeof window.LinearAccelerationSensor === 'function' || typeof window.Accelerometer === 'function';
+        const hasDeviceMotion = typeof window.DeviceMotionEvent !== 'undefined';
+
+        if (!hasGenericAccel && !hasDeviceMotion) {
+          sensorTypeLabel = 'Tidak didukung browser';
+          setSensorStatus(STATUS.UNAVAILABLE, 'API sensor gerak tidak tersedia', 'Buka di Chrome Android melalui HTTPS langsung atau install APK Android LangkahKu.');
+          return;
+        }
+
+        sensorTypeLabel = hasGenericAccel ? 'Web (Accelerometer)' : 'Web (DeviceMotion)';
+        setSensorStatus(STATUS.AVAILABLE);
+      }
+
+      window.onNativeStepUpdate = function (payloadStr) {
+        try {
+          const data = typeof payloadStr === 'string' ? JSON.parse(payloadStr) : payloadStr;
+          if (typeof data.todaySteps === 'number') setTodaySteps(data.todaySteps);
+          if (typeof data.rejectedJolts === 'number') rejectedJolts = data.rejectedJolts;
+          if (typeof data.signalMag === 'number') {
+            const barPct = Math.min(100, (data.signalMag / 4.0) * 100);
+            document.getElementById('signalBar').style.width = barPct.toFixed(1) + '%';
+            document.getElementById('signalReadout').textContent = data.signalMag.toFixed(2) + ' m/s²';
+          }
+          if (data.sensorType) {
+            sensorTypeLabel = `Native (${data.sensorType})`;
+            document.getElementById('sensorSourceLabel').textContent = `Sumber: ${sensorTypeLabel}`;
+          }
+          if (data.rhythmState === 'LOCKED') {
+            isWalkingLocked = true;
+            pendingRhythmSteps = 0;
+          } else if (data.rhythmState === 'VERIFYING') {
+            isWalkingLocked = false;
+            pendingRhythmSteps = data.pendingSteps || 1;
+          } else {
+            isWalkingLocked = false;
+            pendingRhythmSteps = 0;
+          }
+          updateRhythmBadge();
+        } catch (e) {}
+      };
+
+      window.onNativeSensorStatus = function (payloadStr) {
+        try {
+          const data = typeof payloadStr === 'string' ? JSON.parse(payloadStr) : payloadStr;
+          if (data.sensorType) sensorTypeLabel = `Native (${data.sensorType})`;
+          isTracking = data.status === STATUS.ACTIVE;
+          setSensorStatus(data.status || STATUS.UNAVAILABLE, data.title, data.message);
+        } catch (e) {}
+      };
+
+      function processLinearMagnitude(rawMag, now) {
+        magWindow.push(rawMag);
+        if (magWindow.length > 4) magWindow.shift();
+        const smoothMag = magWindow.reduce((a, b) => a + b, 0) / magWindow.length;
+
+        const cfg = SENSITIVITY[state.sensitivity];
+        const barPct = Math.min(100, (smoothMag / 4.0) * 100);
+        document.getElementById('signalBar').style.width = barPct.toFixed(1) + '%';
+        document.getElementById('signalReadout').textContent = smoothMag.toFixed(2) + ' m/s²';
+
+        if (!isPeakArmed && smoothMag >= cfg.peak) {
+          isPeakArmed = true;
+        } else if (isPeakArmed && smoothMag <= cfg.valley) {
+          isPeakArmed = false;
+          evaluateStepCandidate(now);
+        }
+      }
+
+      function evaluateStepCandidate(now) {
+        const dt = lastCandidateTime === 0 ? 0 : (now - lastCandidateTime);
+
+        if (lastCandidateTime !== 0 && dt < MIN_STEP_INTERVAL_MS) {
+          rejectedJolts += 1;
+          updateRhythmBadge();
+          return;
+        }
+
+        if (lastCandidateTime === 0 || dt > MAX_STEP_INTERVAL_MS) {
+          if (pendingRhythmSteps > 0 && !isWalkingLocked) {
+            rejectedJolts += pendingRhythmSteps;
+          }
+          isWalkingLocked = false;
+          pendingRhythmSteps = 1;
+          lastCandidateTime = now;
+          updateRhythmBadge();
+          return;
+        }
+
+        lastCandidateTime = now;
+        if (isWalkingLocked) {
+          addSteps(1);
+        } else {
+          pendingRhythmSteps += 1;
+          if (pendingRhythmSteps >= CONFIRM_STEPS_NEEDED) {
+            isWalkingLocked = true;
+            addSteps(pendingRhythmSteps);
+            pendingRhythmSteps = 0;
+          }
+        }
+        updateRhythmBadge();
+      }
+
+      function onDeviceMotion(event) {
+        let lx = 0, ly = 0, lz = 0;
+        const lin = event.acceleration;
+        const withG = event.accelerationIncludingGravity;
+
+        if (lin && (lin.x !== null || lin.y !== null || lin.z !== null)) {
+          if (Math.abs(lin.x || 0) + Math.abs(lin.y || 0) + Math.abs(lin.z || 0) > 0.0001) {
+            hardwareSignalSeen = true;
+          }
+          lx = lin.x || 0; ly = lin.y || 0; lz = lin.z || 0;
+        } else if (withG && (withG.x !== null || withG.y !== null || withG.z !== null)) {
+          hardwareSignalSeen = true;
+          const ax = withG.x || 0, ay = withG.y || 0, az = withG.z || 0;
+          if (!gravity.initialized) {
+            gravity = { x: ax, y: ay, z: az, initialized: true };
+          } else {
+            const alpha = 0.85;
+            gravity.x = alpha * gravity.x + (1 - alpha) * ax;
+            gravity.y = alpha * gravity.y + (1 - alpha) * ay;
+            gravity.z = alpha * gravity.z + (1 - alpha) * az;
+          }
+          lx = ax - gravity.x; ly = ay - gravity.y; lz = az - gravity.z;
+        } else {
+          return;
+        }
+
+        processLinearMagnitude(Math.sqrt(lx * lx + ly * ly + lz * lz), Date.now());
+      }
+
+      function startWebSensor() {
+        if (typeof window.DeviceMotionEvent !== 'undefined' && typeof window.DeviceMotionEvent.requestPermission === 'function') {
+          window.DeviceMotionEvent.requestPermission()
+            .then(res => {
+              if (res === 'granted') attachWebListeners();
+              else setSensorStatus(STATUS.DENIED, 'Izin sensor gerak ditolak', 'Izinkan akses Motion & Orientation pada pengaturan browser.');
+            })
+            .catch(() => {
+              setSensorStatus(STATUS.UNAVAILABLE, 'Sensor gagal diinisialisasi', 'Browser membatasi akses DeviceMotionEvent pada halaman ini.');
+            });
+          return;
+        }
+        attachWebListeners();
+      }
+
+      function attachWebListeners() {
+        hardwareSignalSeen = false;
+        gravity.initialized = false;
+        magWindow = [];
+        isPeakArmed = false;
+        pendingRhythmSteps = 0;
+        isWalkingLocked = false;
+        lastCandidateTime = 0;
+
+        let startedGeneric = false;
+        if (typeof window.LinearAccelerationSensor === 'function') {
+          try {
+            genericAccelSensor = new window.LinearAccelerationSensor({ frequency: 50 });
+            genericAccelSensor.addEventListener('reading', () => {
+              hardwareSignalSeen = true;
+              const mag = Math.sqrt(
+                (genericAccelSensor.x || 0) ** 2 +
+                (genericAccelSensor.y || 0) ** 2 +
+                (genericAccelSensor.z || 0) ** 2
+              );
+              processLinearMagnitude(mag, Date.now());
+            });
+            genericAccelSensor.addEventListener('error', ev => {
+              const name = ev && ev.error ? ev.error.name : '';
+              stopWebSensor(false);
+              if (name === 'NotAllowedError' || name === 'SecurityError') {
+                attachDeviceMotionFallback();
+              } else {
+                attachDeviceMotionFallback();
+              }
+            });
+            genericAccelSensor.start();
+            startedGeneric = true;
+            sensorTypeLabel = 'Web (LinearAcceleration)';
+          } catch (e) {
+            startedGeneric = false;
+          }
+        }
+
+        if (!startedGeneric) {
+          attachDeviceMotionFallback();
+          return;
+        }
+        finalizeWebStart();
+      }
+
+      function attachDeviceMotionFallback() {
+        if (typeof window.DeviceMotionEvent === 'undefined') {
+          setSensorStatus(STATUS.UNAVAILABLE, 'Sensor tidak tersedia', 'Browser ini tidak mendukung DeviceMotionEvent.');
+          return;
+        }
+        sensorTypeLabel = 'Web (DeviceMotion)';
+        window.addEventListener('devicemotion', onDeviceMotion);
+        finalizeWebStart();
+      }
+
+      function finalizeWebStart() {
+        isTracking = true;
+        setSensorStatus(STATUS.ACTIVE);
+
+        clearTimeout(sensorWatchdog);
+        sensorWatchdog = setTimeout(() => {
+          if (isTracking && !hardwareSignalSeen) {
+            stopWebSensor(false);
+            let reason = 'Perangkat ini tidak mengirim sinyal akselerometer (misalnya dibuka di laptop/PC).';
+            if (isEmbeddedIframe()) {
+              reason = 'Halaman ini dimuat di dalam embed/iframe (seperti Google Sites) yang memblokir sensor gerak HP. Buka file index.html langsung di GitHub Pages / Netlify Drop (HTTPS) atau install APK Android LangkahKu.';
+            } else if (isInsecureOrigin()) {
+              reason = `Browser memblokir sensor gerak pada protokol "${window.location.protocol}". Buka lewat tautan HTTPS langsung atau install APK Android LangkahKu.`;
+            }
+            setSensorStatus(STATUS.UNAVAILABLE, 'Sensor fisik tidak merespons', reason);
+          }
+        }, 3500);
+
+        clearInterval(idleCheckInterval);
+        idleCheckInterval = setInterval(() => {
+          if (!isTracking) return;
+          const now = Date.now();
+          if (lastCandidateTime > 0 && (now - lastCandidateTime) > RHYTHM_RESET_MS) {
+            if (pendingRhythmSteps > 0 && !isWalkingLocked) {
+              rejectedJolts += pendingRhythmSteps;
+            }
+            pendingRhythmSteps = 0;
+            isWalkingLocked = false;
+            lastCandidateTime = 0;
+            updateRhythmBadge();
+          }
+        }, 400);
+      }
+
+      function stopWebSensor(markAvailable) {
+        window.removeEventListener('devicemotion', onDeviceMotion);
+        if (genericAccelSensor) {
+          try { genericAccelSensor.stop(); } catch (e) {}
+          genericAccelSensor = null;
+        }
+        clearTimeout(sensorWatchdog);
+        clearInterval(idleCheckInterval);
+        isTracking = false;
+        isWalkingLocked = false;
+        pendingRhythmSteps = 0;
+        document.getElementById('signalBar').style.width = '0%';
+        document.getElementById('signalReadout').textContent = '0.00 m/s²';
+        if (markAvailable) setSensorStatus(STATUS.AVAILABLE);
+      }
+
+      function startTracking() {
+        if (hasNativeBridge) {
+          try { window.AndroidStepBridge.requestPermissionAndStart(state.sensitivity); }
+          catch (e) { setSensorStatus(STATUS.UNAVAILABLE, 'Gagal memulai sensor native', 'Terjadi kesalahan pada AndroidStepBridge.'); }
+          return;
+        }
+        startWebSensor();
+      }
+
+      function pauseTracking() {
+        if (hasNativeBridge) {
+          try {
+            window.AndroidStepBridge.pauseTracking();
+            isTracking = false;
+            setSensorStatus(STATUS.AVAILABLE);
+          } catch (e) { showToast('Gagal menjeda sensor native.'); }
+          return;
+        }
+        stopWebSensor(true);
+      }
+
+      function updateTrackingButtonUI() {
+        const btn = document.getElementById('toggleTrackingBtn');
+        const lbl = document.getElementById('toggleTrackingLabel');
+        const ico = document.getElementById('toggleTrackingIcon');
+        if (isTracking) {
+          lbl.textContent = 'Jeda';
+          ico.innerHTML = PAUSE_SVG;
+          btn.className = 'btn-primary paused-mode';
+        } else {
+          lbl.textContent = 'Mulai Hitung';
+          ico.innerHTML = PLAY_SVG;
+          btn.className = 'btn-primary';
+        }
+      }
+
+      function updateRhythmBadge() {
+        const badge = document.getElementById('rhythmLockBadge');
+        document.getElementById('rejectedCountText').textContent = `Guncangan diabaikan: ${rejectedJolts}`;
+
+        if (sensorStatus === STATUS.UNAVAILABLE) {
+          badge.textContent = 'Gagal inisialisasi';
+          badge.className = 'rhythm-badge verifying';
+        } else if (sensorStatus === STATUS.DENIED) {
+          badge.textContent = 'Perlu izin';
+          badge.className = 'rhythm-badge error';
+        } else if (!isTracking) {
+          badge.textContent = 'Dijeda';
+          badge.className = 'rhythm-badge';
+        } else if (isWalkingLocked) {
+          badge.textContent = 'Ritme Terkunci';
+          badge.className = 'rhythm-badge locked';
+        } else if (pendingRhythmSteps > 0) {
+          badge.textContent = `Verifikasi (${pendingRhythmSteps}/${CONFIRM_STEPS_NEEDED})`;
+          badge.className = 'rhythm-badge verifying';
+        } else {
+          badge.textContent = 'Memantau langkah';
+          badge.className = 'rhythm-badge locked';
+        }
+      }
+
+      function renderSensitivityUI() {
+        const cfg = SENSITIVITY[state.sensitivity];
+        document.getElementById('sensThresholdText').textContent = cfg.label;
+        const markerPct = Math.min(95, (cfg.peak / 4.0) * 100);
+        document.getElementById('thresholdMarker').style.left = markerPct.toFixed(1) + '%';
+        document.querySelectorAll('.sens-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.sens === state.sensitivity);
+        });
+      }
+
+      function renderHistory() {
+        const listEl = document.getElementById('historyList');
+        const days = [];
+        const now = new Date();
+        let weeklyTotal = 0;
+
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(now);
+          d.setDate(now.getDate() - i);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          const count = state.history[key] || 0;
+          weeklyTotal += count;
+          let label = '';
+          if (i === 0) label = 'Hari ini';
+          else if (i === 1) label = 'Kemarin';
+          else {
+            try { label = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }); }
+            catch (e) { label = key; }
+          }
+          days.push({ label, count, isToday: i === 0 });
+        }
+
+        document.getElementById('weeklyTotalText').textContent = `Total: ${formatInt(weeklyTotal)}`;
+        const goal = Math.max(1, state.dailyGoal);
+
+        listEl.innerHTML = days.map(item => {
+          const pct = Math.min(100, Math.round((item.count / goal) * 100));
+          return `
+            <div>
+              <div class="hist-item-top">
+                <span class="hist-day${item.isToday ? ' today' : ''}">${item.label}</span>
+                <span class="hist-val${item.isToday ? ' today' : ''}">${formatInt(item.count)} <span>langkah</span></span>
+              </div>
+              <div class="hist-track">
+                <div class="hist-bar${item.isToday ? ' today' : ''}" style="width:${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderUI() {
+        const steps = getTodaySteps();
+        const goal = Math.max(1, state.dailyGoal);
+        const pct = Math.min(100, Math.round((steps / goal) * 100));
+        const offset = RING_CIRCUMFERENCE - (pct / 100) * RING_CIRCUMFERENCE;
+
+        document.getElementById('stepCountText').textContent = formatInt(steps);
+        document.getElementById('goalCountText').textContent = formatInt(goal);
+        document.getElementById('goalPercentText').textContent = `${pct}%`;
+        document.getElementById('progressCircle').style.strokeDashoffset = offset;
+
+        renderSensitivityUI();
+        renderHistory();
+
+        if (window.LangkahKuExtra && typeof window.LangkahKuExtra.render === 'function') {
+          window.LangkahKuExtra.render();
+        }
+      }
+
+      window.LangkahKuAPI = {
+        getState: () => ({
+          dailyGoal: state.dailyGoal,
+          sensitivity: state.sensitivity,
+          history: Object.assign({}, state.history)
+        }),
+        getSteps: () => getTodaySteps(),
+        setGoal: (newGoal) => {
+          const parsed = parseInt(newGoal, 10);
+          state.dailyGoal = Math.max(500, isNaN(parsed) ? 8000 : parsed);
+          saveState();
+          renderUI();
+        },
+        toast: (msg) => showToast(msg)
+      };
+
+      function bindEvents() {
+        document.getElementById('toggleTrackingBtn').addEventListener('click', () => {
+          isTracking ? pauseTracking() : startTracking();
+        });
+
+        document.getElementById('resetTodayBtn').addEventListener('click', () => {
+          rejectedJolts = 0;
+          pendingRhythmSteps = 0;
+          isWalkingLocked = false;
+          setTodaySteps(0);
+          if (hasNativeBridge) {
+            try { window.AndroidStepBridge.resetToday(); } catch (e) {}
+          }
+          updateRhythmBadge();
+          showToast('Hitungan langkah hari ini direset ke 0.');
+        });
+
+        document.querySelectorAll('.sens-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.sensitivity = btn.dataset.sens;
+            saveState();
+            renderSensitivityUI();
+            if (hasNativeBridge) {
+              try { window.AndroidStepBridge.setSensitivity(state.sensitivity); } catch (e) {}
+            }
+            showToast('Kalibrasi sensitivitas diperbarui.');
+          });
+        });
+
+        const modal = document.getElementById('goalModal');
+        const openModal = () => {
+          document.getElementById('goalInput').value = state.dailyGoal;
+          modal.classList.remove('hidden');
+        };
+        const closeModal = () => modal.classList.add('hidden');
+
+        document.getElementById('editGoalBtn').addEventListener('click', openModal);
+        document.getElementById('closeGoalModalBtn').addEventListener('click', closeModal);
+        document.getElementById('cancelGoalBtn').addEventListener('click', closeModal);
+        modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+        document.getElementById('goalForm').addEventListener('submit', e => {
+          e.preventDefault();
+          const val = parseInt(document.getElementById('goalInput').value, 10);
+          state.dailyGoal = Math.max(500, isNaN(val) ? 8000 : val);
+          saveState();
+          renderUI();
+          closeModal();
+          showToast(`Target harian diatur ke ${formatInt(state.dailyGoal)} langkah.`);
+        });
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('todayDateLabel').textContent = formatDateHeading();
+        bindEvents();
+        renderUI();
+        initSensorEnvironment();
+      });
+    })();
+  </script>
+
+  <script>
+    /* LangkahKu - Fitur Tambahan
+       Profil & BMI, Jarak & Kalori, Saran Target, Grafik 7 Hari, Streak, Lencana.
+       Berdiri sendiri: data tambahan disimpan di localStorage key terpisah. */
+    (function () {
+      'use strict';
+      const API = window.LangkahKuAPI;
+      if (!API) return;
+
+      const KEY = 'langkahku_extra_v1';
+      const $ = id => document.getElementById(id);
+      const dateKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const fmt = (n, d = 0) => n.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+      function load() {
+        try {
+          const r = JSON.parse(localStorage.getItem(KEY));
+          return { profile: (r && r.profile) || null, badges: (r && r.badges) || {} };
+        } catch (e) { return { profile: null, badges: {} }; }
+      }
+      function save() { try { localStorage.setItem(KEY, JSON.stringify(extra)); } catch (e) {} }
+
+      let extra = load();
+      let ready = false;
+      let suggested = 0;
+
+      const BADGES = [
+        { id: 'pemula', icon: '👟', name: 'Pemula', desc: '1.000 langkah dalam sehari', ok: c => c.maxDay >= 1000 },
+        { id: 'aktif', icon: '🚶', name: 'Pejalan Aktif', desc: '5.000 langkah dalam sehari', ok: c => c.maxDay >= 5000 },
+        { id: 'target', icon: '🎯', name: 'Target Tercapai', desc: 'Capai target harian sekali', ok: c => c.daysMet >= 1 },
+        { id: 'tangguh', icon: '🏅', name: 'Pejalan Tangguh', desc: '10.000 langkah dalam sehari', ok: c => c.maxDay >= 10000 },
+        { id: 's3', icon: '🔥', name: 'Mulai Konsisten', desc: 'Target tercapai 3 hari beruntun', ok: c => c.best >= 3 },
+        { id: 's7', icon: '🏆', name: 'Seminggu Konsisten', desc: 'Target tercapai 7 hari beruntun', ok: c => c.best >= 7 },
+        { id: 'km10', icon: '🗺️', name: 'Penjelajah 10 km', desc: 'Total jarak tempuh 10 km', ok: c => c.km >= 10 },
+        { id: 'profil', icon: '🧍', name: 'Kenal Diri', desc: 'Isi profil dan hitung BMI', ok: c => c.profile }
+      ];
+
+      /* ---------- CSS ---------- */
+      const css = `
+      .x-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      .x-tile{background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:12px 14px}
+      .x-tile b{display:block;font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+      .x-tile span{font-size:11px;font-weight:600;color:var(--muted)}
+      .x-note{font-size:11px;color:var(--subtle);line-height:1.5;margin-top:10px}
+      .x-form{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+      .x-form label{font-size:11px;font-weight:600;color:#475569;display:flex;flex-direction:column;gap:4px}
+      .x-form input{width:100%;padding:9px 10px;border-radius:10px;border:1px solid #cbd5e1;font-size:16px;font-weight:600;color:var(--text);outline:none}
+      .x-form input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(234,88,12,.15)}
+      .x-form button{grid-column:1/-1;padding:10px;font-size:13px}
+      .x-pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px}
+      .x-kurus{background:#eff6ff;color:#1d4ed8}.x-normal{background:#ecfdf5;color:#047857}
+      .x-gemuk{background:#fffbeb;color:#b45309}.x-obesitas{background:#fff1f2;color:#be123c}
+      .x-bmi{display:flex;align-items:baseline;gap:6px;margin-top:14px}
+      .x-bmi b{font-size:34px;font-weight:800;letter-spacing:-.03em}.x-bmi span{font-size:12px;color:var(--muted)}
+      .x-scale{position:relative;display:flex;height:8px;border-radius:999px;overflow:visible;margin:10px 0 4px}
+      .x-scale i{display:block;height:100%}
+      .x-scale i:first-child{border-radius:999px 0 0 999px}.x-scale i:nth-child(4){border-radius:0 999px 999px 0}
+      .x-mark{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:#0f172a;transform:translateX(-50%)}
+      .x-suggest{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--orange-soft);border:1px solid #fed7aa;font-size:12px;line-height:1.5;color:#7c2d12}
+      .x-suggest button{margin-top:8px;padding:8px 14px;font-size:12px}
+      .x-streak{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:var(--orange-soft);border:1px solid #fed7aa}
+      .x-streak .n{font-size:38px;font-weight:800;line-height:1;color:var(--orange-dark)}
+      .x-streak p{font-size:12px;color:#7c2d12;line-height:1.5}.x-streak p b{font-size:14px}
+      .x-dots{display:flex;gap:6px;margin-top:6px}
+      .x-dots i{width:14px;height:14px;border-radius:50%;background:#fed7aa}.x-dots i.on{background:var(--orange)}
+      .x-badges{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+      .x-badge{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:12px}
+      .x-badge.off{opacity:.45;filter:grayscale(1)}
+      .x-badge em{font-style:normal;font-size:24px}
+      .x-badge b{display:block;font-size:12px;color:var(--text)}.x-badge span{font-size:10.5px;color:var(--muted);line-height:1.3}
+      .x-chart{width:100%;height:auto;display:block}
+      .x-bar{fill:#cbd5e1}.x-bar.today{fill:var(--orange)}.x-bar.met{fill:var(--green)}
+      .x-axis{stroke:#e2e8f0}.x-goal{stroke:#0f172a;stroke-dasharray:4 3;opacity:.7}
+      .x-val{font-size:9px;font-weight:600;fill:#475569;text-anchor:middle}
+      .x-lbl{font-size:10px;fill:#64748b;text-anchor:middle}.x-lbl.today{fill:var(--text);font-weight:700}
+      .x-glbl{font-size:8px;fill:#0f172a;text-anchor:end}
+      .x-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+      .x-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px}`;
+      const st = document.createElement('style');
+      st.textContent = css;
+      document.head.appendChild(st);
+
+      /* ---------- HTML ---------- */
+      const firstCard = document.querySelector('main.main > section.card');
+      firstCard.insertAdjacentHTML('afterend', `
+      <section class="card" style="padding:16px 18px;">
+        <div class="section-head"><h2 class="section-label">Jarak &amp; Kalori Hari Ini</h2></div>
+        <div class="x-stats">
+          <div class="x-tile"><b id="xDist">0,00</b><span>kilometer</span></div>
+          <div class="x-tile"><b id="xKcal">0</b><span>kkal terbakar</span></div>
+        </div>
+        <p id="xStatNote" class="x-note"></p>
+      </section>`);
+
+      const histCard = $('historyList').closest('section');
+      histCard.insertAdjacentHTML('beforebegin', `
+      <section class="card" style="padding:16px 18px;">
+        <div class="section-head"><h2 class="section-label">Profil &amp; BMI</h2><span id="bmiPill" class="x-pill hidden"></span></div>
+        <form id="profileForm" class="x-form">
+          <label>Tinggi (cm)<input id="pH" type="number" min="100" max="230" step="1" inputmode="decimal" placeholder="165" required></label>
+          <label>Berat (kg)<input id="pW" type="number" min="20" max="250" step="0.1" inputmode="decimal" placeholder="60" required></label>
+          <label>Usia (tahun)<input id="pA" type="number" min="10" max="100" step="1" inputmode="numeric" placeholder="20" required></label>
+          <button type="submit" class="btn-save">Simpan &amp; Hitung BMI</button>
+        </form>
+        <div id="bmiBox" class="hidden">
+          <div class="x-bmi"><b id="bmiVal">0,0</b><span>kg/m²</span></div>
+          <div class="x-scale"><i style="width:17.5%;background:#60a5fa"></i><i style="width:32.5%;background:#10b981"></i><i style="width:10%;background:#f59e0b"></i><i style="width:40%;background:#f43f5e"></i><span id="bmiMark" class="x-mark"></span></div>
+          <p id="bmiNote" class="x-note"></p>
+          <div id="goalBox" class="x-suggest"><span id="goalText"></span><br><button id="goalApply" type="button" class="btn-save"></button></div>
+        </div>
+        <p class="x-note">BMI hanyalah indikator kasar dan bukan diagnosis medis. Untuk penilaian kesehatan, konsultasikan ke tenaga kesehatan.</p>
+      </section>
+
+      <section class="card" style="padding:16px 18px;">
+        <div class="section-head"><h2 class="section-label">Pencapaian</h2><span id="badgeCount" class="section-mono"></span></div>
+        <div class="x-streak">
+          <span class="n" id="streakNum">0</span>
+          <div><p><b>🔥 hari beruntun</b></p><p id="streakMsg"></p><div id="streakDots" class="x-dots"></div></div>
+        </div>
+        <div id="badgeGrid" class="x-badges"></div>
+      </section>
+
+      <section class="card" style="padding:16px 18px;">
+        <div class="section-head"><h2 class="section-label">Grafik 7 Hari</h2><span id="chartAvg" class="section-mono"></span></div>
+        <div id="chartBox"></div>
+        <div class="x-legend"><span><i style="background:var(--green)"></i>Target tercapai</span><span><i style="background:var(--orange)"></i>Hari ini</span><span><i style="background:#cbd5e1"></i>Belum tercapai</span></div>
+      </section>`);
+
+      /* ---------- Data ---------- */
+      const body = () => extra.profile ? { h: extra.profile.height, w: extra.profile.weight, own: true } : { h: 165, w: 60, own: false };
+      const stride = h => 0.415 * h / 100;
+
+      function streakStats() {
+        const s = API.getState(), goal = Math.max(1, s.dailyGoal), h = s.history;
+        const met = k => (Number(h[k]) || 0) >= goal;
+        let cur = 0, c = new Date();
+        if (!met(dateKey(c))) c.setDate(c.getDate() - 1);
+        for (let i = 0; i < 3660 && met(dateKey(c)); i++) { cur++; c.setDate(c.getDate() - 1); }
+        let best = 0, run = 0, prev = null, maxDay = 0, total = 0, daysMet = 0;
+        Object.keys(h).sort().forEach(k => {
+          const v = Number(h[k]) || 0;
+          total += v; maxDay = Math.max(maxDay, v);
+          if (v < goal) { run = 0; prev = null; return; }
+          daysMet++;
+          const p = k.split('-'), t = new Date(+p[0], +p[1] - 1, +p[2]);
+          run = prev && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1;
+          prev = t; best = Math.max(best, run);
+        });
+        return { goal, met, cur, best: Math.max(best, cur), maxDay, total, daysMet };
+      }
+
+      function lastDays(n) {
+        const out = [], now = new Date(), h = API.getState().history;
+        for (let i = n - 1; i >= 0; i--) {
+          const d = new Date(now); d.setDate(now.getDate() - i);
+          const key = dateKey(d);
+          out.push({ key, d, count: Number(h[key]) || 0, today: i === 0 });
+        }
+        return out;
+      }
+
+      /* ---------- Render ---------- */
+      function renderBmi(s) {
+        const p = extra.profile;
+        $('bmiBox').classList.toggle('hidden', !p);
+        $('bmiPill').classList.toggle('hidden', !p);
+        if (!p) return;
+        const m = p.height / 100, bmi = p.weight / (m * m);
+        let key, label, note, goal, why;
+        if (bmi < 18.5) { key = 'kurus'; label = 'Kurus'; note = 'Berat badan di bawah rentang normal.'; goal = 6000; why = 'Jalan santai sudah cukup untuk menjaga stamina tanpa membakar terlalu banyak energi.'; }
+        else if (bmi < 25) { key = 'normal'; label = 'Normal'; note = 'Berat badan dalam rentang normal. Pertahankan!'; goal = 8000; why = 'Jumlah ini cukup untuk menjaga kebugaran.'; }
+        else if (bmi <= 27) { key = 'gemuk'; label = 'Gemuk'; note = 'Sedikit di atas rentang normal.'; goal = 9000; why = 'Target sedikit lebih tinggi membantu menambah pembakaran kalori.'; }
+        else { key = 'obesitas'; label = 'Obesitas'; note = 'Di atas rentang normal.'; goal = 10000; why = 'Naikkan langkah secara bertahap agar tubuh terbiasa.'; }
+        if (p.age >= 60 && goal > 7000) { goal = 7000; why += ' Disesuaikan untuk usia 60 tahun ke atas.'; }
+        $('bmiVal').textContent = fmt(bmi, 1);
+        $('bmiPill').className = 'x-pill x-' + key;
+        $('bmiPill').textContent = label;
+        $('bmiMark').style.left = Math.max(0, Math.min(100, (bmi - 15) / 20 * 100)) + '%';
+        $('bmiNote').textContent = `${note} Rentang berat normal untuk tinggi ${p.height} cm: ${fmt(18.5 * m * m, 1)}–${fmt(25 * m * m, 1)} kg.`;
+        suggested = goal;
+        const same = s.dailyGoal === goal;
+        $('goalText').textContent = `Saran target: ${fmt(goal)} langkah per hari. ${why}` + (same ? ' Targetmu saat ini sudah sesuai.' : '');
+        $('goalApply').classList.toggle('hidden', same);
+        $('goalApply').textContent = `Pakai target ${fmt(goal)}`;
+      }
+
+      function renderAch(st2, b) {
+        const ctx = { maxDay: st2.maxDay, daysMet: st2.daysMet, best: st2.best, km: st2.total * stride(b.h) / 1000, profile: b.own };
+        const fresh = [];
+        BADGES.forEach(x => {
+          if (!extra.badges[x.id] && x.ok(ctx)) { extra.badges[x.id] = dateKey(new Date()); fresh.push(x); }
+        });
+        if (fresh.length) { save(); if (ready) fresh.forEach(x => API.toast('Lencana baru: ' + x.name)); }
+
+        $('streakNum').textContent = st2.cur;
+        const today = st2.met(dateKey(new Date()));
+        $('streakMsg').textContent = (today ? 'Target hari ini tercapai. ' : st2.cur > 0 ? 'Capai target hari ini agar rantai tidak putus. ' : 'Capai target hari ini untuk memulai streak. ') + `Terbaik: ${st2.best} hari.`;
+        $('streakDots').innerHTML = lastDays(7).map(d => `<i class="${st2.met(d.key) ? 'on' : ''}" title="${d.key}"></i>`).join('');
+
+        const got = BADGES.filter(x => extra.badges[x.id]).length;
+        $('badgeCount').textContent = `${got}/${BADGES.length} lencana`;
+        $('badgeGrid').innerHTML = BADGES.map(x =>
+          `<div class="x-badge ${extra.badges[x.id] ? '' : 'off'}"><em>${x.icon}</em><div><b>${x.name}</b><span>${x.desc}</span></div></div>`).join('');
+      }
+
+      function renderChart(s) {
+        const days = lastDays(7), goal = Math.max(1, s.dailyGoal);
+        const max = Math.max(goal, ...days.map(d => d.count)) * 1.1;
+        const W = 320, H = 176, L = 8, R = 8, T = 18, B = 26, pw = W - L - R, ph = H - T - B, slot = pw / 7, bw = 26;
+        const gy = T + ph - goal / max * ph;
+        let svg = `<svg class="x-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik batang langkah 7 hari terakhir">`;
+        svg += `<line class="x-axis" x1="${L}" y1="${T + ph}" x2="${W - R}" y2="${T + ph}"/>`;
+        days.forEach((d, i) => {
+          const h = d.count > 0 ? Math.max(2, d.count / max * ph) : 0;
+          const x = L + i * slot + (slot - bw) / 2, y = T + ph - h;
+          const cls = d.count >= goal ? 'met' : d.today ? 'today' : '';
+          let name; try { name = d.d.toLocaleDateString('id-ID', { weekday: 'short' }); } catch (e) { name = d.key.slice(8); }
+          svg += `<rect class="x-bar ${cls}" x="${x}" y="${y}" width="${bw}" height="${h}" rx="5"><title>${name}: ${fmt(d.count)} langkah</title></rect>`;
+          if (d.count > 0) svg += `<text class="x-val" x="${x + bw / 2}" y="${y - 4}">${d.count >= 1000 ? fmt(d.count / 1000, 1) + 'k' : d.count}</text>`;
+          svg += `<text class="x-lbl ${d.today ? 'today' : ''}" x="${x + bw / 2}" y="${T + ph + 16}">${name}</text>`;
+        });
+        svg += `<line class="x-goal" x1="${L}" y1="${gy}" x2="${W - R}" y2="${gy}"/><text class="x-glbl" x="${W - R}" y="${gy - 3}">Target</text></svg>`;
+        $('chartBox').innerHTML = svg;
+        $('chartAvg').textContent = `Rata-rata ${fmt(days.reduce((a, d) => a + d.count, 0) / 7)}/hari`;
+      }
+
+      function render() {
+        const s = API.getState(), b = body();
+        const km = API.getSteps() * stride(b.h) / 1000;
+        $('xDist').textContent = fmt(km, 2);
+        $('xKcal').textContent = fmt(0.5 * b.w * km);
+        $('xStatNote').textContent = b.own
+          ? `Perkiraan dari panjang langkah ${Math.round(stride(b.h) * 100)} cm dan berat ${b.w} kg.`
+          : 'Memakai data bawaan (tinggi 165 cm, berat 60 kg). Isi Profil & BMI agar lebih akurat.';
+        renderBmi(s);
+        renderAch(streakStats(), b);
+        renderChart(s);
+      }
+
+      /* ---------- Events ---------- */
+      if (extra.profile) {
+        $('pH').value = extra.profile.height;
+        $('pW').value = extra.profile.weight;
+        $('pA').value = extra.profile.age;
+      }
+      $('profileForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const height = parseFloat($('pH').value), weight = parseFloat($('pW').value), age = parseInt($('pA').value, 10);
+        if (!(height >= 100 && height <= 230 && weight >= 20 && weight <= 250 && age >= 10 && age <= 100)) {
+          API.toast('Isi tinggi 100–230 cm, berat 20–250 kg, dan usia 10–100 tahun.');
+          return;
+        }
+        extra.profile = { height, weight, age };
+        save();
+        render();
+        API.toast('Profil disimpan.');
+      });
+      $('goalApply').addEventListener('click', () => {
+        if (!suggested) return;
+        API.setGoal(suggested);
+        API.toast(`Target harian diatur ke ${fmt(suggested)} langkah.`);
+      });
+      window.addEventListener('load', () => { ready = true; render(); });
+
+      window.LangkahKuExtra = { render };
+    })();
+  </script>
+</body>
+</html>
